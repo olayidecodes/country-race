@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Game Settings</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; }
+body { background: #0d1b2a; color: #fff; overflow-x: hidden; }
+
+/* ── Header ── */
+.header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; background: rgba(0,0,0,.4);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  position: sticky; top: 0; z-index: 10;
+}
+.back-btn {
+  color: #4af; text-decoration: none; font-size: 22px;
+  line-height: 1; padding: 4px; flex-shrink: 0;
+}
+.header-text h1 { font-size: 16px; font-weight: 700; }
+.header-text p  { font-size: 12px; color: rgba(255,255,255,.5); margin-top: 1px; }
+.save-badge {
+  margin-left: auto; font-size: 11px; color: #4af;
+  opacity: 0; transition: opacity .4s;
+}
+.save-badge.show { opacity: 1; }
+
+/* ── Sections ── */
+.section {
+  padding: 18px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+.section-title {
+  font-size: 14px; font-weight: 700; margin-bottom: 4px;
+}
+.section-desc { font-size: 12px; color: rgba(255,255,255,.5); margin-bottom: 14px; }
+
+/* ── Victory condition ── */
+.vc-row { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+.vc-slider {
+  flex: 1; -webkit-appearance: none; appearance: none;
+  height: 6px; border-radius: 3px;
+  background: linear-gradient(to right, #f5a623 0%, #f5a623 var(--pct,50%), rgba(255,255,255,.15) var(--pct,50%));
+  outline: none; cursor: pointer;
+}
+.vc-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 22px; height: 22px;
+  border-radius: 50%; background: #f5a623;
+  box-shadow: 0 0 0 3px rgba(245,166,35,.3);
+}
+.vc-value {
+  background: #f5a623; color: #000; font-weight: 800;
+  border-radius: 8px; padding: 5px 12px; font-size: 15px; min-width: 60px;
+  text-align: center;
+}
+.presets { display: flex; gap: 8px; flex-wrap: wrap; }
+.preset-btn {
+  background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.2);
+  border-radius: 8px; padding: 6px 16px; font-size: 13px; cursor: pointer;
+  transition: background .15s;
+}
+.preset-btn:hover, .preset-btn.active { background: #f5a623; color: #000; border-color: #f5a623; font-weight: 700; }
+
+/* ── Gift mapping ── */
+.gift-row {
+  background: rgba(255,255,255,.05); border-radius: 10px;
+  padding: 12px; margin-bottom: 10px;
+}
+.gift-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.gift-emoji  { font-size: 28px; }
+.gift-info   { flex: 1; }
+.gift-name   { font-size: 14px; font-weight: 700; }
+.gift-value  { font-size: 11px; color: rgba(255,255,255,.5); }
+.gift-pts    {
+  display: flex; align-items: center; gap: 0;
+  background: rgba(0,0,0,.3); border-radius: 8px; overflow: hidden;
+}
+.pts-btn {
+  background: none; border: none; color: #fff; font-size: 16px; font-weight: 700;
+  padding: 6px 12px; cursor: pointer; transition: background .15s;
+}
+.pts-btn:hover { background: rgba(255,255,255,.1); }
+.pts-display {
+  min-width: 32px; text-align: center; font-size: 14px; font-weight: 700;
+  padding: 0 4px;
+}
+
+.country-chips {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;
+}
+.chip {
+  background: rgba(255,255,255,.1); color: #fff;
+  border: 1.5px solid rgba(255,255,255,.15); border-radius: 20px;
+  padding: 4px 11px; font-size: 12px; cursor: pointer;
+  transition: all .15s;
+}
+.chip:hover   { background: rgba(255,255,255,.18); }
+.chip.active  { background: #e8334a; border-color: #e8334a; font-weight: 700; }
+.chip.random  { background: rgba(255,255,255,.08); }
+.chip.random.active { background: #555; border-color: #888; }
+
+.mapping-preview {
+  font-size: 11px; color: #ffd84d; font-weight: 600;
+  padding: 4px 0; min-height: 18px;
+}
+
+/* ── Countries ── */
+.bulk-btns { display: flex; gap: 8px; margin-bottom: 12px; }
+.bulk-btn  {
+  border: none; border-radius: 8px; padding: 7px 18px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.bulk-select { background: #1a6b2e; color: #4cdf7a; border: 1px solid #4cdf7a; }
+.bulk-clear  { background: #6b1a1a; color: #df4c4c; border: 1px solid #df4c4c; }
+
+.country-list { display: flex; flex-direction: column; gap: 6px; }
+.country-item {
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(255,255,255,.05); border-radius: 10px;
+  padding: 10px 14px; cursor: pointer; transition: background .15s;
+  border: 1.5px solid transparent;
+}
+.country-item:hover { background: rgba(255,255,255,.09); }
+.country-item.selected { border-color: rgba(255,255,255,.2); }
+.country-item .flag { font-size: 24px; }
+.country-item .cname { flex: 1; font-size: 14px; font-weight: 600; }
+.country-check {
+  width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(255,255,255,.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0; transition: all .15s;
+}
+.country-item.selected .country-check {
+  background: #4cdf7a; border-color: #4cdf7a; color: #000;
+}
+
+/* ── Spacer at bottom for mobile ── */
+.bottom-spacer { height: 40px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="/" class="back-btn">&#8592;</a>
+  <div class="header-text">
+    <h1>Game Settings</h1>
+    <p>Configure race parameters</p>
+  </div>
+  <span id="save-badge" class="save-badge">✓ Saved</span>
+</div>
+
+<!-- ── Victory Condition ─────────────────────────────────────────── -->
+<div class="section">
+  <div class="section-title">🏁 Victory Condition</div>
+  <div class="section-desc">How many gift points a country needs to win the race</div>
+  <div class="vc-row">
+    <input type="range" class="vc-slider" id="vc-slider" min="10" max="1000" step="10" value="200"/>
+    <div class="vc-value" id="vc-value">200</div>
+  </div>
+  <div class="presets">
+    <button class="preset-btn" data-v="50">50</button>
+    <button class="preset-btn" data-v="100">100</button>
+    <button class="preset-btn" data-v="200">200</button>
+    <button class="preset-btn" data-v="500">500</button>
+    <button class="preset-btn" data-v="1000">1000</button>
+  </div>
+</div>
+
+<!-- ── Gift Mapping ──────────────────────────────────────────────── -->
+<div class="section">
+  <div class="section-title">🎁 Gift → Country Mapping</div>
+  <div class="section-desc">Assign each TikTok gift to a country. When that gift is sent, the mapped country gets boosted.</div>
+  <div id="gift-list"></div>
+</div>
+
+<!-- ── Countries ─────────────────────────────────────────────────── -->
+<div class="section">
+  <div class="section-title">🌍 Countries</div>
+  <div class="section-desc">Choose which countries participate in the race</div>
+  <div class="bulk-btns">
+    <button class="bulk-btn bulk-select" id="btn-select-all">Select All</button>
+    <button class="bulk-btn bulk-clear"  id="btn-clear-all">Clear All</button>
+  </div>
+  <div class="country-list" id="country-list"></div>
+</div>
+
+<div class="bottom-spacer"></div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────
+let allCountries = [];
+let giftTypes    = [];
+let activeCountries = [];
+let goalPoints   = 200;
+let giftMapping  = {}; // giftName -> { country, pts }
+
+let saveTimer = null;
+
+// ── Load config ──────────────────────────────────────────────────────────
+async function loadConfig() {
+  const res  = await fetch('/api/config');
+  const data = await res.json();
+
+  allCountries    = data.allCountries    || [];
+  giftTypes       = data.giftTypes       || [];
+  activeCountries = data.activeCountries || [];
+  goalPoints      = data.goalPoints      || 200;
+  giftMapping     = JSON.parse(JSON.stringify(data.giftMapping || {}));
+
+  renderVictoryCondition();
+  renderGiftMapping();
+  renderCountries();
+}
+
+// ── Save config (debounced 400ms) ─────────────────────────────────────────
+function schedSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveConfig, 400);
+}
+
+async function saveConfig() {
+  await fetch('/api/config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ activeCountries, goalPoints, giftMapping }),
+  });
+  const badge = document.getElementById('save-badge');
+  badge.classList.add('show');
+  setTimeout(() => badge.classList.remove('show'), 1800);
+}
+
+// ── Victory Condition ────────────────────────────────────────────────────
+function renderVictoryCondition() {
+  const slider  = document.getElementById('vc-slider');
+  const display = document.getElementById('vc-value');
+
+  slider.value = goalPoints;
+  display.textContent = goalPoints;
+  updateSliderBg(slider);
+  updatePresetHighlight();
+
+  slider.oninput = () => {
+    goalPoints = parseInt(slider.value, 10);
+    display.textContent = goalPoints;
+    updateSliderBg(slider);
+    updatePresetHighlight();
+    schedSave();
+  };
+
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.onclick = () => {
+      goalPoints = parseInt(btn.dataset.v, 10);
+      slider.value = goalPoints;
+      display.textContent = goalPoints;
+      updateSliderBg(slider);
+      updatePresetHighlight();
+      schedSave();
+    };
+  });
+}
+
+function updateSliderBg(slider) {
+  const min = parseInt(slider.min, 10);
+  const max = parseInt(slider.max, 10);
+  const val = parseInt(slider.value, 10);
+  const pct = ((val - min) / (max - min) * 100).toFixed(1);
+  slider.style.setProperty('--pct', pct + '%');
+}
+
+function updatePresetHighlight() {
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.v, 10) === goalPoints);
+  });
+}
+
+// ── Gift Mapping ──────────────────────────────────────────────────────────
+function renderGiftMapping() {
+  const container = document.getElementById('gift-list');
+  container.innerHTML = '';
+
+  giftTypes.forEach(gift => {
+    const entry = giftMapping[gift.name] || { country: 'random', pts: 1 };
+    const div = document.createElement('div');
+    div.className = 'gift-row';
+    div.id = `gift-row-${gift.id}`;
+
+    div.innerHTML = `
+      <div class="gift-header">
+        <div class="gift-emoji">${gift.emoji}</div>
+        <div class="gift-info">
+          <div class="gift-name">${gift.name}</div>
+          <div class="gift-value">Value: ${gift.diamonds} diamond${gift.diamonds !== 1 ? 's' : ''}</div>
+        </div>
+        <div class="gift-pts">
+          <button class="pts-btn" data-gift="${gift.name}" data-dir="-">−</button>
+          <span class="pts-display" id="pts-${gift.id}">${entry.pts}</span>
+          <button class="pts-btn" data-gift="${gift.name}" data-dir="+">+</button>
+        </div>
+      </div>
+      <div class="country-chips" id="chips-${gift.id}"></div>
+      <div class="mapping-preview" id="prev-${gift.id}"></div>
+    `;
+    container.appendChild(div);
+
+    buildChips(gift, entry.country);
+    updatePreview(gift);
+
+    // Pts +/- buttons
+    div.querySelectorAll('.pts-btn').forEach(btn => {
+      btn.onclick = () => {
+        const current = giftMapping[gift.name]?.pts ?? 1;
+        const next = btn.dataset.dir === '+' ? current + 1 : Math.max(1, current - 1);
+        giftMapping[gift.name] = { ...giftMapping[gift.name], pts: next };
+        document.getElementById(`pts-${gift.id}`).textContent = next;
+        updatePreview(gift);
+        schedSave();
+      };
+    });
+  });
+}
+
+function buildChips(gift, selected) {
+  const container = document.getElementById(`chips-${gift.id}`);
+  container.innerHTML = '';
+
+  // "Random" chip
+  const random = document.createElement('button');
+  random.className = 'chip random' + ((!selected || selected === 'random') ? ' active' : '');
+  random.textContent = '🎲 Random';
+  random.onclick = () => selectCountryForGift(gift, 'random');
+  container.appendChild(random);
+
+  // One chip per active country (all countries, greyed out if inactive)
+  allCountries.forEach(c => {
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (selected === c.id ? ' active' : '');
+    chip.textContent = `${c.flag} ${c.name}`;
+    chip.dataset.cid = c.id;
+    if (!activeCountries.includes(c.id)) {
+      chip.style.opacity = '0.4';
+    }
+    chip.onclick = () => selectCountryForGift(gift, c.id);
+    container.appendChild(chip);
+  });
+}
+
+function selectCountryForGift(gift, countryId) {
+  const current = giftMapping[gift.name] || { pts: 1 };
+  giftMapping[gift.name] = { ...current, country: countryId };
+  // Refresh chips
+  buildChips(gift, countryId);
+  updatePreview(gift);
+  schedSave();
+}
+
+function updatePreview(gift) {
+  const el = document.getElementById(`prev-${gift.id}`);
+  if (!el) return;
+  const entry = giftMapping[gift.name];
+  if (!entry || !entry.country || entry.country === 'random') {
+    el.textContent = `${gift.emoji} → 🎲 Random (+${entry?.pts ?? 1} pts each)`;
+    return;
+  }
+  const c = allCountries.find(x => x.id === entry.country);
+  if (c) {
+    el.textContent = `${gift.emoji} → ${c.flag} ${c.name} (+${entry.pts ?? 1} pts each)`;
+  }
+}
+
+// ── Countries ─────────────────────────────────────────────────────────────
+function renderCountries() {
+  const list = document.getElementById('country-list');
+  list.innerHTML = '';
+
+  allCountries.forEach(c => {
+    const isActive = activeCountries.includes(c.id);
+    const div = document.createElement('div');
+    div.className = 'country-item' + (isActive ? ' selected' : '');
+    div.id = `ci-${c.id}`;
+    div.innerHTML = `
+      <span class="flag">${c.flag}</span>
+      <span class="cname">${c.name}</span>
+      <div class="country-check">${isActive ? '✓' : ''}</div>
+    `;
+    div.onclick = () => toggleCountry(c.id);
+    list.appendChild(div);
+  });
+
+  document.getElementById('btn-select-all').onclick = () => {
+    activeCountries = allCountries.map(c => c.id);
+    renderCountries();
+    refreshChipStates();
+    schedSave();
+  };
+  document.getElementById('btn-clear-all').onclick = () => {
+    activeCountries = [];
+    renderCountries();
+    refreshChipStates();
+    schedSave();
+  };
+}
+
+function toggleCountry(id) {
+  const idx = activeCountries.indexOf(id);
+  if (idx === -1) {
+    activeCountries.push(id);
+  } else {
+    if (activeCountries.length <= 1) return; // keep at least 1
+    activeCountries.splice(idx, 1);
+  }
+  renderCountries();
+  refreshChipStates();
+  schedSave();
+}
+
+// Grey-out chips for inactive countries
+function refreshChipStates() {
+  giftTypes.forEach(gift => {
+    const container = document.getElementById(`chips-${gift.id}`);
+    if (!container) return;
+    container.querySelectorAll('.chip[data-cid]').forEach(chip => {
+      chip.style.opacity = activeCountries.includes(chip.dataset.cid) ? '1' : '0.4';
+    });
+  });
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────
+loadConfig();
+</script>
+</body>
+</html>

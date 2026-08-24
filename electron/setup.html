@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Country Race</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%; font-family: system-ui, -apple-system, sans-serif;
+  background: #0d1b2a; color: #fff; overflow: hidden;
+  user-select: none; -webkit-app-region: drag;
+}
+button, input, a { -webkit-app-region: no-drag; }
+
+.page {
+  height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 28px 36px; gap: 0;
+}
+
+/* ── Hero ── */
+.hero { text-align: center; margin-bottom: 28px; }
+.hero-icon { font-size: 52px; line-height: 1; margin-bottom: 10px;
+  animation: float 3s ease-in-out infinite; display: block; }
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+.hero-title {
+  font-size: 22px; font-weight: 800; letter-spacing: .5px;
+  background: linear-gradient(135deg, #fff 30%, #ffd84d);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero-sub { font-size: 12px; color: rgba(255,255,255,.45); margin-top: 4px; }
+
+/* ── Card ── */
+.card {
+  width: 100%; background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1); border-radius: 16px;
+  padding: 24px; display: flex; flex-direction: column; gap: 16px;
+}
+
+/* ── Input ── */
+.field-label {
+  font-size: 11px; font-weight: 600; color: rgba(255,255,255,.5);
+  letter-spacing: .5px; text-transform: uppercase; margin-bottom: 6px;
+}
+.input-wrap {
+  display: flex; align-items: center; gap: 0;
+  background: rgba(0,0,0,.35); border: 1.5px solid rgba(255,255,255,.15);
+  border-radius: 10px; overflow: hidden; transition: border-color .2s;
+}
+.input-wrap:focus-within { border-color: rgba(255,255,255,.4); }
+.input-at {
+  padding: 0 10px 0 14px; font-size: 16px; color: rgba(255,255,255,.35);
+  font-weight: 600;
+}
+.input-wrap input {
+  flex: 1; background: none; border: none; outline: none;
+  color: #fff; font-size: 15px; font-weight: 600; padding: 12px 14px 12px 0;
+  letter-spacing: .3px;
+}
+.input-wrap input::placeholder { color: rgba(255,255,255,.2); font-weight: 400; }
+
+/* ── Buttons ── */
+.btn-primary {
+  width: 100%; padding: 13px; border: none; border-radius: 10px; cursor: pointer;
+  font-size: 14px; font-weight: 700; letter-spacing: .3px;
+  background: linear-gradient(135deg, #e8334a, #c0002a);
+  color: #fff; transition: opacity .15s, transform .1s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-primary:hover:not(:disabled) { opacity: .9; }
+.btn-primary:active:not(:disabled) { transform: scale(.98); }
+.btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+
+.btn-secondary {
+  width: 100%; padding: 10px; border: 1.5px solid rgba(255,255,255,.15);
+  border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600;
+  background: rgba(255,255,255,.06); color: rgba(255,255,255,.7);
+  transition: background .15s;
+}
+.btn-secondary:hover { background: rgba(255,255,255,.1); color: #fff; }
+
+/* ── Divider ── */
+.divider {
+  display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,.2);
+  font-size: 11px;
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 1px; background: rgba(255,255,255,.1);
+}
+
+/* ── Status ── */
+#status-wrap {
+  display: none; flex-direction: column; gap: 10px;
+}
+.status-line {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600;
+}
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.status-dot.connecting { background: #ffd84d; animation: pulse 1s ease-in-out infinite alternate; }
+.status-dot.connected  { background: #2dc653; }
+.status-dot.error      { background: #e8334a; }
+@keyframes pulse { from { opacity: .4; } to { opacity: 1; } }
+#status-text { color: rgba(255,255,255,.8); }
+
+/* ── URL rows ── */
+.urls { display: flex; flex-direction: column; gap: 7px; }
+.url-row {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(0,0,0,.3); border-radius: 8px; padding: 7px 10px;
+}
+.url-label { font-size: 10px; color: rgba(255,255,255,.4); font-weight: 700;
+  letter-spacing: .4px; text-transform: uppercase; width: 52px; flex-shrink: 0; }
+.url-val   { flex: 1; font-size: 11px; color: rgba(255,255,255,.7); font-family: monospace; }
+.url-btn   {
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12);
+  border-radius: 5px; color: rgba(255,255,255,.6); font-size: 10px; font-weight: 600;
+  padding: 3px 8px; cursor: pointer; transition: background .15s; white-space: nowrap;
+}
+.url-btn:hover { background: rgba(255,255,255,.15); color: #fff; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Hero -->
+  <div class="hero">
+    <span class="hero-icon">🏁</span>
+    <div class="hero-title">Nation Horse Race</div>
+    <div class="hero-sub">TikTok LIVE Gift Game</div>
+  </div>
+
+  <!-- Setup card -->
+  <div class="card" id="setup-card">
+    <div>
+      <div class="field-label">TikTok Username</div>
+      <div class="input-wrap">
+        <span class="input-at">@</span>
+        <input id="username" type="text" placeholder="your_username" autocomplete="off" spellcheck="false"/>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="btn-start">
+      <span>🔴</span> Start Live Game
+    </button>
+
+    <div class="divider">or</div>
+
+    <button class="btn-secondary" id="btn-sim">
+      🎮 Simulate Mode <span style="font-size:10px;opacity:.6">(no TikTok needed)</span>
+    </button>
+  </div>
+
+  <!-- Connected card (hidden until connected) -->
+  <div class="card" id="connected-card" style="display:none">
+    <div id="status-wrap" style="display:flex">
+      <div class="status-line">
+        <div class="status-dot connecting" id="status-dot"></div>
+        <span id="status-text">Connecting…</span>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="btn-game" style="display:none">
+      🎮 Open Game
+    </button>
+
+    <div class="urls" id="url-rows" style="display:none">
+      <div class="url-row">
+        <span class="url-label">Browser</span>
+        <span class="url-val">localhost:8080</span>
+        <button class="url-btn" onclick="copy('http://localhost:8080')">Copy</button>
+        <button class="url-btn" onclick="openUrl('http://localhost:8080')">Open</button>
+      </div>
+      <div class="url-row">
+        <span class="url-label">OBS</span>
+        <span class="url-val">localhost:8080/?obs=1</span>
+        <button class="url-btn" onclick="copy('http://localhost:8080/?obs=1')">Copy</button>
+      </div>
+      <div class="url-row">
+        <span class="url-label">Settings</span>
+        <span class="url-val">localhost:8080/settings.html</span>
+        <button class="url-btn" onclick="openUrl('http://localhost:8080/settings.html')">Open</button>
+      </div>
+    </div>
+
+    <button class="btn-secondary" id="btn-back">← Back</button>
+  </div>
+
+</div>
+<script>
+const usernameInput = document.getElementById('username');
+const btnStart      = document.getElementById('btn-start');
+const btnSim        = document.getElementById('btn-sim');
+const btnGame       = document.getElementById('btn-game');
+const btnBack       = document.getElementById('btn-back');
+const setupCard     = document.getElementById('setup-card');
+const connectedCard = document.getElementById('connected-card');
+const statusDot     = document.getElementById('status-dot');
+const statusText    = document.getElementById('status-text');
+const urlRows       = document.getElementById('url-rows');
+
+function copy(text)    { window.app.copy(text); }
+function openUrl(url)  { window.app.openUrl(url); }
+
+function setStatus(state, text) {
+  statusDot.className = `status-dot ${state}`;
+  statusText.textContent = text;
+}
+
+async function launch({ username, simulate }) {
+  setupCard.style.display     = 'none';
+  connectedCard.style.display = '';
+  btnGame.style.display       = 'none';
+  urlRows.style.display       = 'none';
+  setStatus('connecting', simulate ? 'Starting simulator…' : `Connecting to @${username}…`);
+
+  const result = await window.app.startServer({ username, simulate });
+
+  if (result.ok) {
+    setStatus('connected', simulate ? '✅ Simulator running' : `✅ Connected to @${username}`);
+    btnGame.style.display  = '';
+    urlRows.style.display  = '';
+  } else {
+    setStatus('error', '❌ ' + (result.error || 'Connection failed'));
+  }
+}
+
+btnStart.onclick = () => {
+  const username = usernameInput.value.trim().replace(/^@/, '');
+  if (!username) { usernameInput.focus(); return; }
+  launch({ username, simulate: false });
+};
+
+btnSim.onclick = () => launch({ username: null, simulate: true });
+
+btnGame.onclick = () => window.app.openGame();
+
+btnBack.onclick = () => {
+  connectedCard.style.display = 'none';
+  setupCard.style.display     = '';
+};
+
+usernameInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') btnStart.click();
+});
+</script>
+</body>
+</html>

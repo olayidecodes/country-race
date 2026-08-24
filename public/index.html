@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Nation Horse Race</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; }
+body { background: #0d1b2a; color: #fff; overflow: hidden; }
+body.obs { background: transparent; }
+
+/* ── Top bar ──────────────────────────────────────────── */
+.topbar {
+  display: flex; align-items: center;
+  padding: 5px 12px; background: rgba(0,0,0,.5);
+  height: 42px; gap: 8px; flex-shrink: 0;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+.topbar-left { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.mode-badge {
+  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+  border-radius: 4px; padding: 2px 8px; font-size: 10px; color: #ccc;
+}
+.settings-btn {
+  color: rgba(255,255,255,.5); text-decoration: none; font-size: 17px; line-height: 1;
+  transition: color .15s;
+}
+.settings-btn:hover { color: #fff; }
+.win-counts {
+  display: flex; gap: 5px; flex: 1; overflow-x: auto; align-items: center;
+  scrollbar-width: none;
+}
+.win-counts::-webkit-scrollbar { display: none; }
+.win-badge {
+  display: flex; align-items: center; gap: 3px; white-space: nowrap;
+  background: rgba(255,255,255,.07); border-radius: 20px;
+  padding: 2px 9px; font-size: 11px; font-weight: 600;
+  border: 1px solid rgba(255,255,255,.08);
+}
+.win-badge .wins { color: #ffd84d; margin-left: 2px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; font-size: 11px; }
+.goal-label { color: #ffd84d; font-weight: 700; }
+#status { color: rgba(255,255,255,.45); font-size: 10px; }
+
+/* ── Main layout ──────────────────────────────────────── */
+#app { display: flex; flex-direction: column; height: 100vh; }
+.race-area { display: flex; flex: 1; overflow: hidden; min-height: 0; }
+#lanes { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── Lane ─────────────────────────────────────────────── */
+.lane {
+  flex: 1; display: flex; align-items: center;
+  padding: 0 6px 0 4px; min-height: 0; position: relative;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  transition: background .4s;
+}
+/* Leader glow */
+.lane.leader { background: rgba(255,220,50,.03); }
+/* Near-finish pulse */
+.lane.near-finish { animation: nearPulse .45s ease-in-out infinite alternate; }
+@keyframes nearPulse {
+  from { background-color: transparent; }
+  to   { background-color: rgba(255,180,0,.06); }
+}
+
+/* ── Lane meta (left column) ──────────────────────────── */
+.lane-meta {
+  width: 100px; flex-shrink: 0; display: flex; flex-direction: column;
+  align-items: flex-start; justify-content: center; gap: 1px; padding-right: 6px;
+}
+.lane-rank {
+  font-size: 9px; font-weight: 800; letter-spacing: .5px;
+  border-radius: 3px; padding: 1px 5px; margin-bottom: 1px;
+  opacity: .9;
+}
+.lane-rank.r1 { background: #ffd700; color: #000; }
+.lane-rank.r2 { background: #b0b0b0; color: #000; }
+.lane-rank.r3 { background: #c87533; color: #fff; }
+.lane-rank.rn { background: rgba(255,255,255,.1); color: rgba(255,255,255,.6); }
+.lane-flag-row { display: flex; align-items: center; gap: 5px; }
+.lane-flag { font-size: 20px; line-height: 1; }
+.lane-name { font-size: 10px; font-weight: 700; letter-spacing: .4px; color: #ddd; }
+.lane-gift { font-size: 13px; min-height: 15px; margin-top: 1px; }
+
+/* ── Track ─────────────────────────────────────────────── */
+.track-wrap {
+  flex: 1; position: relative; height: 52%; min-height: 18px;
+}
+/* Subtle lane tint */
+.track-bg {
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,.04); border-radius: 5px;
+  overflow: hidden;
+}
+/* Moving dashes — simulate forward motion */
+.track-dashes {
+  position: absolute;
+  top: 50%; left: 0; right: 0; height: 3px;
+  transform: translateY(-50%);
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px, transparent 12px,
+    rgba(255,255,255,.22) 12px, rgba(255,255,255,.22) 22px
+  );
+  background-size: 34px 3px;
+  animation: dashFlow .55s linear infinite;
+}
+@keyframes dashFlow {
+  to { background-position-x: -34px; }
+}
+/* Speed up dashes for near-finish lane */
+.lane.near-finish .track-dashes { animation-duration: .2s !important; background-image: repeating-linear-gradient(90deg, transparent 0px, transparent 8px, rgba(255,200,0,.45) 8px, rgba(255,200,0,.45) 16px); }
+/* Speed boost flash on gift receive */
+.lane.boosted .track-dashes { animation-duration: .1s !important; }
+
+/* Progress bar */
+.progress-bar {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  border-radius: 5px; width: 0%;
+  transition: width .38s cubic-bezier(.4,0,.2,1);
+  z-index: 1;
+}
+
+/* Goal line */
+.track-goal {
+  position: absolute; right: 0; top: -10px; bottom: -10px;
+  width: 0; border-left: 2px dashed rgba(255,255,255,.4); z-index: 2;
+}
+/* Checkered flag at goal */
+.track-goal::after {
+  content: '🏁';
+  position: absolute; top: 50%; right: 4px;
+  transform: translateY(-50%);
+  font-size: 16px;
+}
+
+/* Runner emoji — positioned by JS at leading edge of bar */
+.runner {
+  position: absolute;
+  left: 0px;
+  top: 50%; transform: translateY(-50%) scaleX(-1);
+  font-size: 20px; z-index: 3;
+  transition: left .38s cubic-bezier(.4,0,.2,1),
+              filter .25s ease;
+  filter: drop-shadow(0 1px 4px rgba(0,0,0,.7));
+  pointer-events: none;
+}
+.runner.boosted {
+  filter: drop-shadow(0 0 10px #fff) drop-shadow(0 1px 4px rgba(0,0,0,.7)) brightness(1.4);
+  animation: runnerBounce .3s ease;
+}
+@keyframes runnerBounce {
+  0%, 100% { transform: translateY(-50%) scaleX(-1) scale(1); }
+  40%       { transform: translateY(-65%) scaleX(-1) scale(1.2); }
+}
+
+/* Score label */
+.score-label {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  font-size: 9px; color: rgba(255,255,255,.4); font-weight: 700;
+  pointer-events: none; z-index: 4; letter-spacing: .3px;
+}
+
+/* ── Ticker ────────────────────────────────────────────── */
+#ticker {
+  width: 178px; flex-shrink: 0; overflow: hidden;
+  padding: 5px 5px 5px 3px; display: flex; flex-direction: column;
+  gap: 4px; pointer-events: none;
+  border-left: 1px solid rgba(255,255,255,.05);
+}
+.tick-item {
+  background: rgba(0,0,0,.6); border-left: 3px solid #fff;
+  border-radius: 5px; padding: 5px 7px;
+  font-size: 10.5px; font-weight: 600; line-height: 1.35;
+  animation: slideIn .2s ease-out;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Floating gift burst ───────────────────────────────── */
+.gift-burst {
+  position: fixed; pointer-events: none; z-index: 90;
+  font-size: 13px; font-weight: 800;
+  text-shadow: 0 1px 5px rgba(0,0,0,.9);
+  animation: burstUp .9s ease-out forwards;
+  transform: translateX(-50%);
+}
+@keyframes burstUp {
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0)    scale(1); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-52px) scale(1.35); }
+}
+
+/* ── Confetti ──────────────────────────────────────────── */
+.confetti {
+  position: fixed; pointer-events: none; z-index: 200;
+  animation: confettiFall var(--dur, 2s) ease-in var(--delay, 0s) forwards;
+}
+@keyframes confettiFall {
+  from { transform: translateY(-20px) rotate(0deg);   opacity: 1; }
+  to   { transform: translateY(100vh)  rotate(540deg); opacity: 0; }
+}
+
+/* ── Winner banner ─────────────────────────────────────── */
+#banner {
+  position: fixed; inset: 0; z-index: 100;
+  display: none; place-items: center;
+  background: radial-gradient(circle at center, rgba(0,0,0,.85) 0%, rgba(0,0,0,.6) 100%);
+}
+.banner-inner {
+  text-align: center;
+  animation: popIn .45s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(.5) translateY(30px); }
+  to   { opacity: 1; transform: scale(1)  translateY(0); }
+}
+.banner-crown { font-size: 52px; line-height: 1; margin-bottom: 4px; animation: crownSpin 1s ease-out; }
+@keyframes crownSpin {
+  from { transform: rotate(-30deg) scale(.5); opacity: 0; }
+  to   { transform: rotate(0deg)   scale(1);  opacity: 1; }
+}
+.banner-flag  { font-size: 72px; line-height: 1; }
+.banner-name  { font-size: 32px; font-weight: 800; margin: 8px 0 4px; text-shadow: 0 2px 16px #000; letter-spacing: 1px; }
+.banner-wins  { font-size: 16px; color: #ffd84d; font-weight: 600; }
+.banner-next  { font-size: 12px; color: rgba(255,255,255,.45); margin-top: 10px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <span id="mode-badge" class="mode-badge" style="display:none">Demo mode</span>
+      <a href="/settings.html" class="settings-btn" title="Settings">⚙</a>
+    </div>
+    <div id="win-counts" class="win-counts"></div>
+    <div class="topbar-right">
+      <span id="goal-label" class="goal-label">Goal: 200 pts</span>
+      <span id="status">connecting…</span>
+    </div>
+  </div>
+  <div class="race-area">
+    <div id="lanes"></div>
+    <div id="ticker"></div>
+  </div>
+</div>
+
+<div id="banner">
+  <div class="banner-inner">
+    <div class="banner-crown">👑</div>
+    <div id="banner-flag" class="banner-flag"></div>
+    <div id="banner-name" class="banner-name"></div>
+    <div id="banner-wins" class="banner-wins"></div>
+    <div class="banner-next">Next round starts in 5 s…</div>
+  </div>
+</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+if (params.get('obs') === '1') document.body.classList.add('obs');
+const DEV = params.get('dev') === '1';
+
+// ── State ─────────────────────────────────────────────────────────────
+let GOAL = 200;
+let teams = [];
+let winCounts = {};
+let giftMapping = {};
+let won = false;
+let ws;
+const byId = new Map();
+
+// ── Gift reverse-map (country → gift emojis assigned to it) ───────────
+function giftsForCountry(cid) {
+  const emojis = [];
+  for (const [name, entry] of Object.entries(giftMapping)) {
+    if (entry && entry.country === cid) {
+      const gi = (window._giftTypes || []).find(g => g.name === name);
+      if (gi) emojis.push(gi.emoji);
+    }
+  }
+  return emojis;
+}
+
+// ── Build lane DOM ────────────────────────────────────────────────────
+function buildLanes() {
+  const container = document.getElementById('lanes');
+  container.innerHTML = '';
+  teams.forEach(t => {
+    const div = document.createElement('div');
+    div.className = 'lane';
+    div.id = `lane-${t.id}`;
+    div.innerHTML = `
+      <div class="lane-meta">
+        <div class="lane-rank rn" id="rank-${t.id}">—</div>
+        <div class="lane-flag-row">
+          <span class="lane-flag">${t.flag}</span>
+          <span class="lane-name">${t.name}</span>
+        </div>
+        <div class="lane-gift" id="lgift-${t.id}"></div>
+      </div>
+      <div class="track-wrap" id="wrap-${t.id}">
+        <div class="track-bg">
+          <div class="track-dashes"></div>
+        </div>
+        <div class="progress-bar" id="bar-${t.id}"></div>
+        <div class="runner" id="runner-${t.id}">🏃</div>
+        <div class="track-goal"></div>
+        <div class="score-label" id="score-${t.id}">0 / ${GOAL}</div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+  teams.forEach(t => setBarPct(t.id, 0));
+  refreshGiftBadges();
+  updateRanks();
+  if (DEV) buildDevPanel();
+}
+
+// ── Update bar + runner position ───────────────────────────────────────
+function setBarPct(id, pct) {
+  const bar    = document.getElementById(`bar-${id}`);
+  const runner = document.getElementById(`runner-${id}`);
+  const score  = document.getElementById(`score-${id}`);
+  if (!bar || !runner) return;
+  const p = Math.min(Math.max(pct, 0), 100);
+  const t = byId.get(id);
+
+  // Progress bar width
+  bar.style.width = p + '%';
+  // Bar color: base color with opacity growing as it fills
+  if (t) {
+    const alphaHex = Math.round(0x20 + (0x60 - 0x20) * p / 100).toString(16).padStart(2,'0');
+    bar.style.background = `linear-gradient(90deg, ${t.color}44, ${t.color}${alphaHex})`;
+    bar.style.boxShadow  = p > 0 ? `inset 0 0 0 1px ${t.color}66` : 'none';
+  }
+
+  // Runner at leading edge; max() keeps it at the start line when score is 0
+  runner.style.left = `max(-10px, calc(${p}% - 14px))`;
+
+  // Score label
+  if (score && t) score.textContent = `${Math.round(t.score || 0)} / ${GOAL}`;
+}
+
+// ── Rank badges ────────────────────────────────────────────────────────
+function updateRanks() {
+  const sorted = [...teams].sort((a,b) => (b.score||0) - (a.score||0));
+  const labels = ['1ST','2ND','3RD','4TH','5TH','6TH','7TH','8TH','9TH','10TH'];
+  const cls    = ['r1','r2','r3'];
+
+  sorted.forEach((t, i) => {
+    const el   = document.getElementById(`rank-${t.id}`);
+    const lane = document.getElementById(`lane-${t.id}`);
+    if (!el) return;
+    el.textContent = labels[i] || '';
+    el.className   = `lane-rank ${cls[i] || 'rn'}`;
+    if (lane) lane.classList.toggle('leader', i === 0 && (t.score||0) > 0);
+  });
+}
+
+// ── Gift badges in lane meta ───────────────────────────────────────────
+function refreshGiftBadges() {
+  teams.forEach(t => {
+    const el = document.getElementById(`lgift-${t.id}`);
+    if (el) el.textContent = giftsForCountry(t.id).join(' ') || '';
+  });
+}
+
+// ── Win-count top bar ──────────────────────────────────────────────────
+function updateWinCounts(counts) {
+  if (counts) winCounts = counts;
+  const container = document.getElementById('win-counts');
+  const medals    = ['🥇','🥈','🥉'];
+  const sorted    = [...teams].sort((a,b) => (winCounts[b.id]||0) - (winCounts[a.id]||0));
+  container.innerHTML = sorted.map((t,i) => `
+    <div class="win-badge">
+      ${medals[i]||''} ${t.flag} ${t.name}
+      <span class="wins">${winCounts[t.id]||0}W</span>
+    </div>`).join('');
+}
+
+// ── Ticker ─────────────────────────────────────────────────────────────
+const MAX_TICKS = 8;
+function addTick(text, color) {
+  const ticker = document.getElementById('ticker');
+  const div = document.createElement('div');
+  div.className = 'tick-item';
+  div.style.borderLeftColor = color || '#fff';
+  div.textContent = text;
+  ticker.insertBefore(div, ticker.firstChild);
+  while (ticker.children.length > MAX_TICKS) ticker.removeChild(ticker.lastChild);
+}
+
+// ── Floating gift burst particle ───────────────────────────────────────
+function showBurst(teamId, emoji, pts, color) {
+  const runner = document.getElementById(`runner-${teamId}`);
+  if (!runner) return;
+  const rect = runner.getBoundingClientRect();
+  const el   = document.createElement('div');
+  el.className = 'gift-burst';
+  el.textContent = `${emoji} +${Math.round(pts)}`;
+  el.style.cssText = `left:${rect.left + rect.width/2}px;top:${rect.top - 6}px;color:${color}`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 950);
+}
+
+// ── Confetti ───────────────────────────────────────────────────────────
+function launchConfetti(winnerColor) {
+  const palette = ['#ffd700','#ff6b9d','#4af','#0ff','#f72585','#00ff87','#ff9500', winnerColor];
+  for (let i = 0; i < 70; i++) {
+    const el    = document.createElement('div');
+    const color = palette[Math.floor(Math.random() * palette.length)];
+    const size  = 5 + Math.random() * 9;
+    el.className = 'confetti';
+    el.style.cssText = `
+      left:${Math.random()*100}vw; top:-20px;
+      width:${size}px; height:${size}px;
+      background:${color};
+      border-radius:${Math.random()>.5?'50%':'2px'};
+      --dur:${1.4+Math.random()*2}s;
+      --delay:${Math.random()*.9}s;
+    `;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+}
+
+// ── Scoring ────────────────────────────────────────────────────────────
+function addPoints(teamId, pts, giftEmoji, tickText) {
+  if (won) return;
+  const t = byId.get(teamId);
+  if (!t) return;
+  t.score = (t.score || 0) + pts;
+  const pct = Math.min(t.score / GOAL * 100, 100);
+  setBarPct(teamId, pct);
+  updateRanks();
+
+  if (giftEmoji) showBurst(teamId, giftEmoji, pts, t.color);
+  if (tickText)  addTick(tickText, t.color);
+
+  // Boost flash on runner
+  const runner = document.getElementById(`runner-${teamId}`);
+  if (runner) {
+    runner.classList.remove('boosted');
+    void runner.offsetWidth; // reflow to restart animation
+    runner.classList.add('boosted');
+    setTimeout(() => runner.classList.remove('boosted'), 450);
+  }
+
+  // Near-finish effect (> 80% of goal)
+  const lane = document.getElementById(`lane-${teamId}`);
+  if (lane) lane.classList.toggle('near-finish', t.score >= GOAL * 0.8 && t.score < GOAL);
+
+  if (t.score >= GOAL) declareWinner(t);
+}
+
+// ── Winner ─────────────────────────────────────────────────────────────
+function declareWinner(t) {
+  won = true;
+  document.getElementById('banner-flag').textContent = t.flag;
+  document.getElementById('banner-name').textContent = t.name + ' WINS!';
+  const prevW = winCounts[t.id] || 0;
+  document.getElementById('banner-wins').textContent = `${prevW + 1} win${prevW + 1 !== 1 ? 's' : ''}`;
+  document.getElementById('banner').style.display = 'grid';
+  launchConfetti(t.color);
+  if (ws && ws.readyState === 1) ws.send(JSON.stringify({ kind: 'roundWin', team: t.id }));
+  setTimeout(resetRound, 5000);
+}
+
+function resetRound() {
+  won = false;
+  document.getElementById('banner').style.display = 'none';
+  teams.forEach(t => {
+    t.score = 0;
+    setBarPct(t.id, 0);
+    const lane = document.getElementById(`lane-${t.id}`);
+    if (lane) { lane.classList.remove('near-finish','leader'); }
+  });
+  document.getElementById('ticker').innerHTML = '';
+  updateRanks();
+}
+
+// ── Config ─────────────────────────────────────────────────────────────
+function applyConfig(msg) {
+  GOAL         = msg.goalPoints  || GOAL;
+  giftMapping  = msg.giftMapping || {};
+  window._giftTypes = msg.giftTypes || [];
+  document.getElementById('goal-label').textContent = `Goal: ${GOAL} pts`;
+  if (msg.isSimulating) document.getElementById('mode-badge').style.display = '';
+
+  const incoming = msg.teams || [];
+  const prevById = new Map(teams.map(t => [t.id, t]));
+  teams = incoming.map(t => ({ ...t, score: prevById.get(t.id)?.score || 0 }));
+  byId.clear();
+  teams.forEach(t => byId.set(t.id, t));
+
+  buildLanes();
+  updateWinCounts(msg.winCounts);
+}
+
+// ── WebSocket ──────────────────────────────────────────────────────────
+function connect() {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${proto}://${location.host}`);
+  const statusEl = document.getElementById('status');
+
+  ws.onopen  = () => (statusEl.textContent = '🟢 live');
+  ws.onclose = () => { statusEl.textContent = 'reconnecting…'; setTimeout(connect, 1500); };
+
+  ws.onmessage = (ev) => {
+    const m = JSON.parse(ev.data);
+    if (m.kind === 'config') {
+      applyConfig(m);
+    } else if (m.kind === 'gift') {
+      const t = byId.get(m.team);
+      const tick = `${t?.flag||''} ${t?.name||m.team} + ${m.giftEmoji||'🎁'} +${Math.round(m.points)}pts`;
+      addPoints(m.team, m.points, m.giftEmoji || '🎁', tick);
+    } else if (m.kind === 'like') {
+      addPoints(m.team, m.points, null, null);
+    } else if (m.kind === 'winCounts') {
+      updateWinCounts(m.winCounts);
+    } else if (m.kind === 'streamEnd') {
+      statusEl.textContent = 'stream ended';
+    }
+  };
+}
+connect();
+
+// ── Dev panel ──────────────────────────────────────────────────────────
+function buildDevPanel() {
+  let dev = document.getElementById('dev');
+  if (!dev) {
+    dev = document.createElement('div');
+    dev.id = 'dev';
+    dev.style.cssText = 'position:fixed;left:8px;bottom:8px;display:flex;flex-wrap:wrap;gap:5px;z-index:50';
+    document.body.appendChild(dev);
+  }
+  dev.innerHTML = '';
+  teams.forEach(t => {
+    const b = document.createElement('button');
+    b.textContent = `${t.flag} +25`;
+    b.style.cssText = 'background:#ff2d55;color:#fff;border:0;border-radius:7px;padding:5px 11px;font-weight:700;cursor:pointer;font-size:12px';
+    b.onclick = () => addPoints(t.id, 25, '🎁', `${t.flag} ${t.name} + 🎁 +25pts`);
+    dev.appendChild(b);
+  });
+}
+</script>
+</body>
+</html>
