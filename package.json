@@ -38,17 +38,12 @@
       "package.json"
     ],
     "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ]
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "signingHashAlgorithms": null
     },
     "mac": {
-      "target": "dmg"
+      "target": "dmg",
+      "identity": null
     },
     "nsis": {
       "oneClick": true,
