@@ -11,8 +11,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
 const PORT = process.env.PORT || 8080;
 
-// ---- Countries ---------------------------------------------------------------
-const ALL_COUNTRIES = [
+// ---- Default competitors (editable at runtime via /api/config) ---------------
+const DEFAULT_COMPETITORS = [
   { id: 'vn', name: 'VIETNAM',     flag: '🇻🇳', color: '#e8334a', keys: ['vietnam', 'viet', 'vn'] },
   { id: 'mm', name: 'MYANMAR',     flag: '🇲🇲', color: '#f5a623', keys: ['myanmar', 'burma', 'mm'] },
   { id: 'jp', name: 'JAPAN',       flag: '🇯🇵', color: '#ff6b9d', keys: ['japan', 'jp'] },
@@ -25,30 +25,69 @@ const ALL_COUNTRIES = [
   { id: 'cn', name: 'CHINA',       flag: '🇨🇳', color: '#ff5722', keys: ['china', 'cn'] },
 ];
 
-// ---- Gift types --------------------------------------------------------------
+// ---- Gift types (names must match exactly what TikTok sends in giftName) ----
 const GIFT_TYPES = [
-  { id: 'rose',      name: 'Rose',      emoji: '🌹', diamonds: 1   },
-  { id: 'panda',     name: 'Panda',     emoji: '🐼', diamonds: 5   },
-  { id: 'butterfly', name: 'Butterfly', emoji: '🦋', diamonds: 1   },
-  { id: 'fish',      name: 'Fish',      emoji: '🐟', diamonds: 1   },
-  { id: 'turtle',    name: 'Turtle',    emoji: '🐢', diamonds: 1   },
-  { id: 'icecream',  name: 'Ice Cream', emoji: '🍦', diamonds: 1   },
-  { id: 'dumbbell',  name: 'Dumbbell',  emoji: '🏋️', diamonds: 1   },
-  { id: 'fireworks', name: 'Fireworks', emoji: '🎆', diamonds: 199 },
+  // ── 1 diamond ──────────────────────────────────────────────────────────────
+  { id: 'rose',           name: 'Rose',           emoji: '🌹', diamonds: 1     },
+  { id: 'tiktok',         name: 'TikTok',         emoji: '🎵', diamonds: 1     },
+  { id: 'finger_heart',   name: 'Finger Heart',   emoji: '🫶', diamonds: 1     },
+  { id: 'sunglasses',     name: 'Sunglasses',     emoji: '🕶️', diamonds: 1     },
+  { id: 'butterfly',      name: 'Butterfly',      emoji: '🦋', diamonds: 1     },
+  { id: 'fish',           name: 'Fish',           emoji: '🐟', diamonds: 1     },
+  { id: 'turtle',         name: 'Turtle',         emoji: '🐢', diamonds: 1     },
+  { id: 'icecream',       name: 'Ice Cream',      emoji: '🍦', diamonds: 1     },
+  { id: 'dumbbell',       name: 'Dumbbell',       emoji: '🏋️', diamonds: 1     },
+  { id: 'star',           name: 'Star',           emoji: '⭐',  diamonds: 1     },
+  { id: 'heart',          name: 'Heart',          emoji: '❤️',  diamonds: 1     },
+  { id: 'confetti',       name: 'Confetti',       emoji: '🎊', diamonds: 1     },
+  { id: 'cap',            name: 'Cap',            emoji: '🧢', diamonds: 1     },
+  { id: 'football',       name: 'Football',       emoji: '⚽', diamonds: 1     },
+  { id: 'mic',            name: 'Mic',            emoji: '🎤', diamonds: 1     },
+  { id: 'drama_glasses',  name: 'Drama',          emoji: '🎭', diamonds: 1     },
+  // ── 5 diamonds ─────────────────────────────────────────────────────────────
+  { id: 'panda',          name: 'Panda',          emoji: '🐼', diamonds: 5     },
+  { id: 'love_explosion', name: 'Love Explosion', emoji: '💝', diamonds: 5     },
+  { id: 'biceps',         name: 'Biceps',         emoji: '💪', diamonds: 5     },
+  // ── 10 diamonds ────────────────────────────────────────────────────────────
+  { id: 'little_crown',   name: 'Little Crown',   emoji: '👑', diamonds: 10    },
+  { id: 'guitar',         name: 'Guitar',         emoji: '🎸', diamonds: 10    },
+  // ── 20–30 diamonds ─────────────────────────────────────────────────────────
+  { id: 'perfume',        name: 'Perfume',        emoji: '🌸', diamonds: 20    },
+  { id: 'wishing_bottle', name: 'Wishing Bottle', emoji: '🍾', diamonds: 20    },
+  { id: 'love_bang',      name: 'Love Bang',      emoji: '💥', diamonds: 25    },
+  { id: 'hand_heart',     name: 'Hand Heart',     emoji: '🫰', diamonds: 25    },
+  // ── 50–100 diamonds ────────────────────────────────────────────────────────
+  { id: 'concert',        name: 'Concert',        emoji: '🎶', diamonds: 50    },
+  { id: 'camera',         name: 'Camera',         emoji: '📷', diamonds: 50    },
+  { id: 'rainbow',        name: 'Rainbow Puke',   emoji: '🌈', diamonds: 100   },
+  { id: 'diamond_ring',   name: 'Diamond Ring',   emoji: '💍', diamonds: 100   },
+  // ── 199 diamonds ───────────────────────────────────────────────────────────
+  { id: 'fireworks',      name: 'Fireworks',      emoji: '🎆', diamonds: 199   },
+  // ── 500 diamonds ───────────────────────────────────────────────────────────
+  { id: 'sports_car',     name: 'Sports Car',     emoji: '🏎️', diamonds: 500   },
+  { id: 'planet',         name: 'Planet',         emoji: '🪐', diamonds: 500   },
+  // ── 1 000 diamonds ─────────────────────────────────────────────────────────
+  { id: 'rocket',         name: 'Rocket',         emoji: '🚀', diamonds: 1000  },
+  { id: 'galaxy',         name: 'Galaxy',         emoji: '🌌', diamonds: 1000  },
+  // ── 5 000+ diamonds (high-rollers) ─────────────────────────────────────────
+  { id: 'drama_queen',    name: 'Drama Queen',    emoji: '👸', diamonds: 5000  },
+  { id: 'lion',           name: 'Lion',           emoji: '🦁', diamonds: 29999 },
+  { id: 'universe',       name: 'Universe',       emoji: '🌠', diamonds: 34999 },
 ];
 
 // ---- Game state --------------------------------------------------------------
 let gameConfig = {
-  activeCountries: ALL_COUNTRIES.map(c => c.id),
-  goalPoints: 200,
-  giftMapping: {},
+  competitors:     DEFAULT_COMPETITORS.map(c => ({ ...c })),
+  activeCountries: DEFAULT_COMPETITORS.map(c => c.id),
+  goalPoints:      200,
+  giftMapping:     {},
 };
-const winCounts = Object.fromEntries(ALL_COUNTRIES.map(c => [c.id, 0]));
+const winCounts = Object.fromEntries(DEFAULT_COMPETITORS.map(c => [c.id, 0]));
 const userTeam  = new Map();
 
 // ---- Helpers -----------------------------------------------------------------
-function getActiveCountries() {
-  return ALL_COUNTRIES.filter(c => gameConfig.activeCountries.includes(c.id));
+function getActiveCompetitors() {
+  return gameConfig.competitors.filter(c => gameConfig.activeCountries.includes(c.id));
 }
 
 function resolveTeamForGift(giftName) {
@@ -63,8 +102,8 @@ function resolveTeamForGift(giftName) {
 
 function resolveTeamFromText(text = '') {
   const lower = text.toLowerCase();
-  for (const c of ALL_COUNTRIES) {
-    if (gameConfig.activeCountries.includes(c.id) && c.keys.some(k => lower.includes(k))) {
+  for (const c of gameConfig.competitors) {
+    if (gameConfig.activeCountries.includes(c.id) && c.keys?.some(k => lower.includes(k.toLowerCase()))) {
       return c.id;
     }
   }
@@ -89,12 +128,12 @@ function userOf(data) {
 
 function configPayload(isSimulating = false) {
   return {
-    kind: 'config',
-    allCountries: ALL_COUNTRIES,
-    giftTypes:    GIFT_TYPES,
-    teams:        getActiveCountries(),
-    goalPoints:   gameConfig.goalPoints,
-    giftMapping:  gameConfig.giftMapping,
+    kind:        'config',
+    competitors: gameConfig.competitors,
+    giftTypes:   GIFT_TYPES,
+    teams:       getActiveCompetitors(),
+    goalPoints:  gameConfig.goalPoints,
+    giftMapping: gameConfig.giftMapping,
     winCounts,
     isSimulating,
   };
@@ -107,18 +146,46 @@ app.use(express.static(join(__dirname, 'public')));
 
 app.get('/api/config', (_req, res) => {
   res.json({
-    allCountries:    ALL_COUNTRIES,
+    competitors:     gameConfig.competitors,
     giftTypes:       GIFT_TYPES,
     activeCountries: gameConfig.activeCountries,
     goalPoints:      gameConfig.goalPoints,
     giftMapping:     gameConfig.giftMapping,
     winCounts,
+    isSimulating:    _isSimulating,
   });
 });
 
 app.post('/api/config', (req, res) => {
-  const { activeCountries, goalPoints, giftMapping } = req.body;
-  if (Array.isArray(activeCountries) && activeCountries.length > 0) gameConfig.activeCountries = activeCountries;
+  const { competitors, activeCountries, goalPoints, giftMapping } = req.body;
+
+  if (Array.isArray(competitors) && competitors.length > 0) {
+    // Validate each entry has minimum required fields
+    const validated = competitors.filter(c => c.id && c.name);
+    if (validated.length > 0) {
+      gameConfig.competitors = validated;
+      // Init winCounts for brand-new competitors (existing ones keep their counts)
+      validated.forEach(c => { if (winCounts[c.id] === undefined) winCounts[c.id] = 0; });
+      // Ensure activeCountries only references existing competitor IDs
+      const ids = validated.map(c => c.id);
+      gameConfig.activeCountries = gameConfig.activeCountries.filter(id => ids.includes(id));
+      if (gameConfig.activeCountries.length === 0) gameConfig.activeCountries = [validated[0].id];
+      // Reset gift mappings that pointed to deleted competitors
+      for (const name of Object.keys(gameConfig.giftMapping)) {
+        const mapped = gameConfig.giftMapping[name].country;
+        if (mapped && mapped !== 'random' && !ids.includes(mapped)) {
+          gameConfig.giftMapping[name] = { ...gameConfig.giftMapping[name], country: 'random' };
+        }
+      }
+    }
+  }
+
+  if (Array.isArray(activeCountries)) {
+    const ids = gameConfig.competitors.map(c => c.id);
+    const filtered = activeCountries.filter(id => ids.includes(id));
+    gameConfig.activeCountries = filtered.length > 0 ? filtered : gameConfig.activeCountries;
+  }
+
   if (typeof goalPoints === 'number' && goalPoints > 0) gameConfig.goalPoints = goalPoints;
   if (giftMapping && typeof giftMapping === 'object') gameConfig.giftMapping = giftMapping;
   broadcast(configPayload());

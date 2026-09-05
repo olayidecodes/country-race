@@ -64,24 +64,22 @@ body.obs { background: transparent; }
   to   { background-color: rgba(255,180,0,.06); }
 }
 
-/* ── Lane meta (left column) ──────────────────────────── */
+/* ── Lane meta (left column — rank + flag only) ───────── */
 .lane-meta {
-  width: 100px; flex-shrink: 0; display: flex; flex-direction: column;
-  align-items: flex-start; justify-content: center; gap: 1px; padding-right: 6px;
+  width: 64px; flex-shrink: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 3px; padding-right: 4px;
 }
 .lane-rank {
-  font-size: 9px; font-weight: 800; letter-spacing: .5px;
-  border-radius: 3px; padding: 1px 5px; margin-bottom: 1px;
-  opacity: .9;
+  font-size: 9px; font-weight: 900; letter-spacing: .5px;
+  border-radius: 4px; padding: 2px 6px;
+  opacity: .95; white-space: nowrap;
 }
 .lane-rank.r1 { background: #ffd700; color: #000; }
 .lane-rank.r2 { background: #b0b0b0; color: #000; }
 .lane-rank.r3 { background: #c87533; color: #fff; }
-.lane-rank.rn { background: rgba(255,255,255,.1); color: rgba(255,255,255,.6); }
-.lane-flag-row { display: flex; align-items: center; gap: 5px; }
-.lane-flag { font-size: 20px; line-height: 1; }
-.lane-name { font-size: 10px; font-weight: 700; letter-spacing: .4px; color: #ddd; }
-.lane-gift { font-size: 13px; min-height: 15px; margin-top: 1px; }
+.lane-rank.rn { background: rgba(255,255,255,.1); color: rgba(255,255,255,.55); }
+.lane-flag { font-size: 26px; line-height: 1; }
+.lane-gift { font-size: 12px; min-height: 14px; line-height: 1; }
 
 /* ── Track ─────────────────────────────────────────────── */
 .track-wrap {
@@ -160,6 +158,21 @@ body.obs { background: transparent; }
   position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
   font-size: 9px; color: rgba(255,255,255,.4); font-weight: 700;
   pointer-events: none; z-index: 4; letter-spacing: .3px;
+}
+
+/* Name label — drawn on the track left edge in the competitor's color */
+.track-name {
+  position: absolute;
+  left: 6px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px; font-weight: 900; letter-spacing: .7px;
+  background: rgba(0,0,0,.38);
+  border-radius: 4px;
+  padding: 1px 5px;
+  text-shadow: 0 1px 5px rgba(0,0,0,1);
+  z-index: 2; pointer-events: none;
+  white-space: nowrap; max-width: 55%;
+  overflow: hidden; text-overflow: ellipsis;
 }
 
 /* ── Ticker ────────────────────────────────────────────── */
@@ -295,10 +308,7 @@ function buildLanes() {
     div.innerHTML = `
       <div class="lane-meta">
         <div class="lane-rank rn" id="rank-${t.id}">—</div>
-        <div class="lane-flag-row">
-          <span class="lane-flag">${t.flag}</span>
-          <span class="lane-name">${t.name}</span>
-        </div>
+        <span class="lane-flag">${t.flag}</span>
         <div class="lane-gift" id="lgift-${t.id}"></div>
       </div>
       <div class="track-wrap" id="wrap-${t.id}">
@@ -306,6 +316,7 @@ function buildLanes() {
           <div class="track-dashes"></div>
         </div>
         <div class="progress-bar" id="bar-${t.id}"></div>
+        <div class="track-name" style="color:${t.color}">${t.name}</div>
         <div class="runner" id="runner-${t.id}">🏃</div>
         <div class="track-goal"></div>
         <div class="score-label" id="score-${t.id}">0 / ${GOAL}</div>
