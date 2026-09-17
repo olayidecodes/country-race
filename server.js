@@ -27,52 +27,19 @@ const DEFAULT_COMPETITORS = [
 
 // ---- Gift types (names must match exactly what TikTok sends in giftName) ----
 const GIFT_TYPES = [
-  // ── 1 diamond ──────────────────────────────────────────────────────────────
-  { id: 'rose',           name: 'Rose',           emoji: '🌹', diamonds: 1     },
-  { id: 'tiktok',         name: 'TikTok',         emoji: '🎵', diamonds: 1     },
-  { id: 'finger_heart',   name: 'Finger Heart',   emoji: '🫶', diamonds: 1     },
-  { id: 'sunglasses',     name: 'Sunglasses',     emoji: '🕶️', diamonds: 1     },
-  { id: 'butterfly',      name: 'Butterfly',      emoji: '🦋', diamonds: 1     },
-  { id: 'fish',           name: 'Fish',           emoji: '🐟', diamonds: 1     },
-  { id: 'turtle',         name: 'Turtle',         emoji: '🐢', diamonds: 1     },
-  { id: 'icecream',       name: 'Ice Cream',      emoji: '🍦', diamonds: 1     },
-  { id: 'dumbbell',       name: 'Dumbbell',       emoji: '🏋️', diamonds: 1     },
-  { id: 'star',           name: 'Star',           emoji: '⭐',  diamonds: 1     },
-  { id: 'heart',          name: 'Heart',          emoji: '❤️',  diamonds: 1     },
-  { id: 'confetti',       name: 'Confetti',       emoji: '🎊', diamonds: 1     },
-  { id: 'cap',            name: 'Cap',            emoji: '🧢', diamonds: 1     },
-  { id: 'football',       name: 'Football',       emoji: '⚽', diamonds: 1     },
-  { id: 'mic',            name: 'Mic',            emoji: '🎤', diamonds: 1     },
-  { id: 'drama_glasses',  name: 'Drama',          emoji: '🎭', diamonds: 1     },
-  // ── 5 diamonds ─────────────────────────────────────────────────────────────
-  { id: 'panda',          name: 'Panda',          emoji: '🐼', diamonds: 5     },
-  { id: 'love_explosion', name: 'Love Explosion', emoji: '💝', diamonds: 5     },
-  { id: 'biceps',         name: 'Biceps',         emoji: '💪', diamonds: 5     },
-  // ── 10 diamonds ────────────────────────────────────────────────────────────
-  { id: 'little_crown',   name: 'Little Crown',   emoji: '👑', diamonds: 10    },
-  { id: 'guitar',         name: 'Guitar',         emoji: '🎸', diamonds: 10    },
-  // ── 20–30 diamonds ─────────────────────────────────────────────────────────
-  { id: 'perfume',        name: 'Perfume',        emoji: '🌸', diamonds: 20    },
-  { id: 'wishing_bottle', name: 'Wishing Bottle', emoji: '🍾', diamonds: 20    },
-  { id: 'love_bang',      name: 'Love Bang',      emoji: '💥', diamonds: 25    },
-  { id: 'hand_heart',     name: 'Hand Heart',     emoji: '🫰', diamonds: 25    },
-  // ── 50–100 diamonds ────────────────────────────────────────────────────────
-  { id: 'concert',        name: 'Concert',        emoji: '🎶', diamonds: 50    },
-  { id: 'camera',         name: 'Camera',         emoji: '📷', diamonds: 50    },
-  { id: 'rainbow',        name: 'Rainbow Puke',   emoji: '🌈', diamonds: 100   },
-  { id: 'diamond_ring',   name: 'Diamond Ring',   emoji: '💍', diamonds: 100   },
-  // ── 199 diamonds ───────────────────────────────────────────────────────────
-  { id: 'fireworks',      name: 'Fireworks',      emoji: '🎆', diamonds: 199   },
-  // ── 500 diamonds ───────────────────────────────────────────────────────────
-  { id: 'sports_car',     name: 'Sports Car',     emoji: '🏎️', diamonds: 500   },
-  { id: 'planet',         name: 'Planet',         emoji: '🪐', diamonds: 500   },
-  // ── 1 000 diamonds ─────────────────────────────────────────────────────────
-  { id: 'rocket',         name: 'Rocket',         emoji: '🚀', diamonds: 1000  },
-  { id: 'galaxy',         name: 'Galaxy',         emoji: '🌌', diamonds: 1000  },
-  // ── 5 000+ diamonds (high-rollers) ─────────────────────────────────────────
-  { id: 'drama_queen',    name: 'Drama Queen',    emoji: '👸', diamonds: 5000  },
-  { id: 'lion',           name: 'Lion',           emoji: '🦁', diamonds: 29999 },
-  { id: 'universe',       name: 'Universe',       emoji: '🌠', diamonds: 34999 },
+  { id: 'rose',             name: 'Rose',             emoji: '🌹', diamonds: 1  },
+  { id: 'tiktok',           name: 'TikTok',           emoji: '🎵', diamonds: 1  },
+  { id: 'flame_heart',      name: 'Flame Heart',      emoji: '❤️‍🔥', diamonds: 1  },
+  { id: 'love_you',         name: 'Love You So Much', emoji: '💌', diamonds: 1  },
+  { id: 'icecream_cone',    name: 'Ice Cream Cone',   emoji: '🍦', diamonds: 1  },
+  { id: 'youre_awesome',    name: "You're Awesome",   emoji: '🌟', diamonds: 1  },
+  { id: 'clap_clap',        name: 'Clap Clap',        emoji: '👏', diamonds: 1  },
+  { id: 'gg',               name: 'GG',               emoji: '🏆', diamonds: 1  },
+  { id: 'heart_me',         name: 'Heart Me',         emoji: '💗', diamonds: 1  },
+  { id: 'finger_heart',     name: 'Finger Heart',     emoji: '🫶', diamonds: 5  },
+  { id: 'panda',            name: 'Panda',            emoji: '🐼', diamonds: 5  },
+  { id: 'rosa',             name: 'Rosa',             emoji: '🌸', diamonds: 10 },
+  { id: 'dolphin',          name: 'Dolphin',          emoji: '🐬', diamonds: 10 },
 ];
 
 // ---- Game state --------------------------------------------------------------
